@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>40K Meta Tracker — Tournament Statistics</title>
+<style>
+:root{
+  --surface-1:#fcfcfb; --page:#f9f9f7;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,.10);
+  --series-1:#2a78d6; --series-2:#1baf7a; --series-5:#4a3aa7;
+  --ord-1:#104281; --ord-2:#2a78d6; --ord-3:#86b6ef;
+}
+@media (prefers-color-scheme: dark){:root{
+  --surface-1:#1a1a19; --page:#0d0d0d;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,.10);
+  --series-1:#3987e5; --series-2:#199e70; --series-5:#9085e9;
+  --ord-1:#86b6ef; --ord-2:#3987e5; --ord-3:#184f95;
+}}
+:root[data-theme="dark"]{
+  --surface-1:#1a1a19; --page:#0d0d0d;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,.10);
+  --series-1:#3987e5; --series-2:#199e70; --series-5:#9085e9;
+  --ord-1:#86b6ef; --ord-2:#3987e5; --ord-3:#184f95;
+}
+:root[data-theme="light"]{
+  --surface-1:#fcfcfb; --page:#f9f9f7;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,.10);
+  --series-1:#2a78d6; --series-2:#1baf7a; --series-5:#4a3aa7;
+  --ord-1:#104281; --ord-2:#2a78d6; --ord-3:#86b6ef;
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--page);color:var(--text-primary);
+  font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:20px}
+.wrap{max-width:1080px;margin:0 auto}
+header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+h1{font-size:22px;font-weight:650}
+.sub{color:var(--text-secondary)}
+.badge{font-size:12px;color:var(--text-secondary);border:1px solid var(--border);
+  border-radius:99px;padding:2px 10px;background:var(--surface-1)}
+#themeBtn{margin-left:auto;font:inherit;font-size:12px;cursor:pointer;color:var(--text-secondary);
+  background:var(--surface-1);border:1px solid var(--border);border-radius:99px;padding:3px 12px}
+.filters{display:flex;gap:10px;align-items:center;margin:16px 0 20px;flex-wrap:wrap}
+.filters label{font-size:12px;color:var(--text-secondary)}
+.filters select{font:inherit;font-size:13px;color:var(--text-primary);
+  background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:5px 10px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.tile{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.tile .lbl{font-size:12px;color:var(--text-secondary)}
+.tile .val{font-size:28px;font-weight:600;margin-top:2px}
+.tile .note{font-size:12px;color:var(--muted);margin-top:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;
+  padding:16px 18px;margin-bottom:16px}
+.card h2{font-size:14px;font-weight:650;margin-bottom:2px}
+.card .desc{font-size:12px;color:var(--text-secondary);margin-bottom:12px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--text-secondary);margin-bottom:10px}
+.legend .key{display:inline-flex;align-items:center;gap:6px}
+.legend .sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+.row{display:grid;grid-template-columns:170px 1fr 40px;align-items:center;gap:8px;
+  padding:3px 0;border-radius:6px}
+.row:focus-visible{outline:2px solid var(--series-1);outline-offset:1px}
+.row .name{font-size:13px;color:var(--text-secondary);text-align:right;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .val{font-size:12px;color:var(--text-secondary);font-variant-numeric:tabular-nums}
+.track{position:relative;height:16px;border-left:1px solid var(--baseline)}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;min-width:2px;
+  transition:filter .1s}
+.row:hover .fill,.row:focus-visible .fill{filter:brightness(1.15)}
+.stack{display:flex;height:16px;border-left:1px solid var(--baseline)}
+.seg{border-radius:0;margin-right:2px}
+.seg:last-child{border-radius:0 4px 4px 0}
+.wide .row{grid-template-columns:280px 1fr 40px}
+@media(max-width:600px){.row,.wide .row{grid-template-columns:120px 1fr 36px}}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:12px;color:var(--muted);font-weight:600;text-align:left;
+  border-bottom:1px solid var(--baseline);padding:6px 8px;white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--grid);vertical-align:top}
+td.num{font-variant-numeric:tabular-nums}
+tr:hover td{background:color-mix(in srgb,var(--series-1) 6%,transparent)}
+.tblwrap{overflow-x:auto}
+.place1 td:first-child{font-weight:650}
+#tooltip{position:fixed;pointer-events:none;z-index:10;background:var(--surface-1);
+  border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);
+  padding:8px 10px;font-size:12px;display:none;max-width:280px}
+#tooltip .tv{font-weight:650;font-size:13px}
+#tooltip .tk{color:var(--text-secondary)}
+footer{color:var(--muted);font-size:12px;margin:24px 0 8px}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>40K Meta Tracker</h1>
+    <span class="badge" id="edBadge"></span>
+    <span class="sub" id="updated"></span>
+    <button id="themeBtn" type="button">Theme: auto</button>
+  </header>
+  <div class="sub" id="tagline">Tournament results across armies — who is winning, with what.</div>
+
+  <div class="filters">
+    <label for="fWeek">Weekend</label><select id="fWeek"></select>
+    <label for="fFaction">Faction</label><select id="fFaction"></select>
+    <span class="sub" id="filterNote"></span>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Event wins by faction</h2>
+      <div class="desc">1st-place finishes at tracked events</div>
+      <div id="winsChart"></div>
+    </div>
+    <div class="card">
+      <h2>Top-table finishes by faction</h2>
+      <div class="desc">All recorded placements, by finishing tier</div>
+      <div class="legend" id="tierLegend"></div>
+      <div id="tierChart"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card wide">
+      <h2>Detachment packages on top tables</h2>
+      <div class="desc">Recorded placements per detachment combination (11th ed multi-detachment lists)</div>
+      <div id="comboChart"></div>
+    </div>
+    <div class="card">
+      <h2>Force Dispositions of top finishers</h2>
+      <div class="desc" id="dispDesc"></div>
+      <div id="dispChart"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Placements</h2>
+    <div class="desc">Every recorded top-table result (also the accessible table view for the charts above)</div>
+    <div class="tblwrap"><table id="plTable">
+      <thead><tr><th>#</th><th>Player</th><th>Faction</th><th>Detachments</th><th>Disposition</th><th>Record</th><th>Event</th><th>Date</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h2>Events</h2>
+    <div class="tblwrap"><table id="evTable">
+      <thead><tr><th>Event</th><th>Date</th><th>Location</th><th>Players</th><th>Rounds</th><th>Winner</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <footer id="foot"></footer>
+</div>
+<div id="tooltip" role="status"></div>
+
+<script id="events-data" type="application/json">{"schema_version":1,"updated":"2026-07-04","factions":["Adepta Sororitas","Adeptus Custodes","Adeptus Mechanicus","Aeldari","Astra Militarum","Black Templars","Blood Angels","Chaos Daemons","Chaos Knights","Chaos Space Marines","Dark Angels","Death Guard","Deathwatch","Drukhari","Emperor's Children","Genestealer Cults","Grey Knights","Imperial Agents","Imperial Knights","Leagues of Votann","Necrons","Orks","Space Marines","Space Wolves","T'au Empire","Thousand Sons","Tyranids","World Eaters"],"events":[{"id":"gdg-summer-ruin-ii-2026","name":"GDG Summer Ruin II","date":"2026-06-20","city":"Slatington","region":"PA","country":"US","players":30,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: New Era-dication pt.1 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Dan Meloro","faction":"Thousand Sons","subfaction":null,"detachments":["Hexwarp Thrallband","Sekhetar Cohort"],"disposition":"Take and Hold","record":"5-0"},{"place":2,"player":"Kyle Myers","faction":"Dark Angels","subfaction":null,"detachments":["Company of Hunters","Darkflight Pursuit"],"disposition":"Reconnaissance","record":"4-1"},{"place":3,"player":"Garrett Davies","faction":"Emperor's Children","subfaction":null,"detachments":["Coterie of the Conceited"],"disposition":"Purge the Foe","record":"4-1"},{"place":4,"player":"Austin Warfel","faction":"Tyranids","subfaction":null,"detachments":["Subterranean Assault"],"disposition":"Disruption","record":"4-1"},{"place":5,"player":"Logan Smeltz","faction":"Space Marines","subfaction":"Salamanders","detachments":["Forgefather's Seekers","Librarius Conclave"],"disposition":"Purge the Foe","record":"4-1"}]},{"id":"summercon-gold-ticket-2026","name":"Summercon 40k Open 11th Gold Ticket","date":"2026-06-20","city":"Puyallup","region":"WA","country":"US","players":26,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: New Era-dication pt.1 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Sweet Lew","faction":"Leagues of Votann","subfaction":null,"detachments":["Mercenary Oathband","Hearthguard Covenant"],"disposition":"Take and Hold","record":"5-0"},{"place":2,"player":"Ken Bush","faction":"Grey Knights","subfaction":null,"detachments":["Argent Assault","Banishers"],"disposition":"Purge the Foe","record":"4-1"},{"place":3,"player":"Adrian James","faction":"Imperial Knights","subfaction":null,"detachments":["Freeblade Company"],"disposition":"Purge the Foe","record":"4-1"},{"place":4,"player":"Matthew Cargille","faction":"Emperor's Children","subfaction":null,"detachments":["Coterie of the Conceited"],"disposition":"Purge the Foe","record":"4-1"},{"place":5,"player":"Brian Zebley","faction":"Thousand Sons","subfaction":null,"detachments":["Hexwarp Thrallband","Sekhetar Cohort"],"disposition":"Take and Hold","record":"4-1"}]},{"id":"major-warfare-road-to-nova-2026","name":"Major Warfare: Road to Nova","date":"2026-06-20","city":"Brooksville","region":"FL","country":"US","players":26,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: New Era-dication pt.2 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Lee Zagrzebski","faction":"Adeptus Custodes","subfaction":null,"detachments":["Lions of the Emperor","Might of the Moritoi"],"disposition":"Purge the Foe","record":"5-0"},{"place":2,"player":"Logan Prager","faction":"Adepta Sororitas","subfaction":null,"detachments":["Army of Faith"],"disposition":null,"record":"4-1"},{"place":3,"player":"Brad Ledbetter","faction":"Blood Angels","subfaction":null,"detachments":["Stormlance Task Force"],"disposition":null,"record":"4-1"},{"place":4,"player":"Adam Major","faction":"Drukhari","subfaction":null,"detachments":["Skysplinter Assault"],"disposition":null,"record":"4-1"},{"place":5,"player":"Kirk Roettinger","faction":"Tyranids","subfaction":null,"detachments":["Warrior Bioform Onslaught"],"disposition":null,"record":"4-1"}]},{"id":"thess-tabletop-2026","name":"Thess Tabletop","date":"2026-06-20","city":"Thessaloniki","region":null,"country":"GR","players":31,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: New Era-dication pt.2 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Nikolas Papadopoulos","faction":"Adeptus Mechanicus","subfaction":null,"detachments":["Eradication Cohort"],"disposition":"Purge the Foe","record":"5-0"},{"place":2,"player":"Charilaos Chitas","faction":"Black Templars","subfaction":null,"detachments":["Ironstorm Spearhead","The Living Miracle"],"disposition":null,"record":"4-1"},{"place":3,"player":"Andreas Dranidis","faction":"Tyranids","subfaction":null,"detachments":["Subterranean Assault"],"disposition":"Disruption","record":"4-1"},{"place":4,"player":"Dimitrios Zotos","faction":"Deathwatch","subfaction":null,"detachments":["Black Spear Task Force"],"disposition":null,"record":"4-1"},{"place":5,"player":"Nikos Leonakis","faction":"Emperor's Children","subfaction":null,"detachments":["Coterie of the Conceited"],"disposition":"Purge the Foe","record":"4-1"},{"place":6,"player":"Christos Sarsonis","faction":"T'au Empire","subfaction":null,"detachments":["Mont'ka"],"disposition":null,"record":"4-1"}]},{"id":"circuit-breaker-2026","name":"The Circuit Breaker","date":"2026-06-27","city":"Indianola","region":"IA","country":"US","players":50,"rounds":6,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: Eleven Times Eleven pt.1 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Bill Boysen","faction":"Tyranids","subfaction":null,"detachments":["Talons of the Norn Queen","Synaptic Nexus"],"disposition":"Take and Hold","record":"6-0"},{"place":2,"player":"Calvin Foster","faction":"Adeptus Custodes","subfaction":null,"detachments":["Might of the Moritoi","Lions of the Emperor"],"disposition":"Purge the Foe","record":"5-1"},{"place":3,"player":"Nicholas Kudriavetz","faction":"Thousand Sons","subfaction":null,"detachments":["Sekhetar Cohort","Hexwarp Thrallband"],"disposition":"Take and Hold","record":"5-1"},{"place":4,"player":"Dan Sammons","faction":"Space Marines","subfaction":null,"detachments":["Forgefather's Seekers","Librarius Conclave"],"disposition":"Reconnaissance","record":"5-1"},{"place":5,"player":"Matthew Doughman","faction":"Imperial Knights","subfaction":null,"detachments":["Dominus Foebreakers","Gate Warden Lance"],"disposition":"Purge the Foe","record":"5-1"},{"place":6,"player":"John Vuchetich","faction":"Orks","subfaction":null,"detachments":["Taktikal Brigade","Green Tide"],"disposition":"Take and Hold","record":"5-1"}]},{"id":"second-city-anniversary-2026","name":"Second City Games Anniversary GT","date":"2026-06-27","city":"Highland Park","region":"IL","country":"US","players":44,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: Eleven Times Eleven pt.1 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"John Van Dusen","faction":"Tyranids","subfaction":null,"detachments":["Ambush Predators","Vanguard Onslaught"],"disposition":"Reconnaissance","record":"5-0"},{"place":2,"player":"Jordan Nach","faction":"T'au Empire","subfaction":null,"detachments":["Mont'ka"],"disposition":"Purge the Foe","record":"4-1"},{"place":3,"player":"Eric Norman","faction":"Thousand Sons","subfaction":null,"detachments":["Sekhetar Cohort","Changehost of Deceit"],"disposition":"Priority Assets","record":"4-1"},{"place":4,"player":"Eric Krolikowski","faction":"Chaos Space Marines","subfaction":null,"detachments":["Cabal of Chaos","Soulforged Warpack"],"disposition":"Purge the Foe","record":"4-1"},{"place":5,"player":"Tyler White","faction":"Adeptus Custodes","subfaction":null,"detachments":["Might of the Moritoi","Lions of the Emperor"],"disposition":null,"record":"4-1"},{"place":6,"player":"Pat Lacher","faction":"Imperial Knights","subfaction":null,"detachments":["Dominus Foebreakers","Gate Warden Lance"],"disposition":"Purge the Foe","record":"4-1"},{"place":7,"player":"Conner Simpson","faction":"Genestealer Cults","subfaction":null,"detachments":["Xenocult Masses","Xenocreed Congregation"],"disposition":"Priority Assets","record":"4-1"}]},{"id":"cherry-city-2026","name":"Treasure Trove Games Cherry City GT","date":"2026-06-27","city":"Keizer","region":"OR","country":"US","players":32,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: Eleven Times Eleven pt.1 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Jonathan Sebert","faction":"Leagues of Votann","subfaction":null,"detachments":["Hearthguard Covenant","Needgaârd Oathband"],"disposition":"Priority Assets","record":"5-0"},{"place":2,"player":"Zack Coddington","faction":"Orks","subfaction":null,"detachments":["More Dakka","Dread Mob"],"disposition":"Purge the Foe","record":"4-1"},{"place":3,"player":"Alex Najdek","faction":"Necrons","subfaction":null,"detachments":["Starshatter Arsenal"],"disposition":"Priority Assets","record":"4-1"},{"place":4,"player":"George Kennedy","faction":"Space Marines","subfaction":"Ultramarines","detachments":["Blade of Ultramar"],"disposition":"Priority Assets","record":"4-1"},{"place":5,"player":"Jameson Haytas","faction":"Chaos Space Marines","subfaction":null,"detachments":["Cabal of Chaos","Fellhammer Siege-host"],"disposition":"Take and Hold","record":"4-1"},{"place":6,"player":"Marc Robson","faction":"Grey Knights","subfaction":null,"detachments":["Argent Assault","Banishers"],"disposition":"Purge the Foe","record":"4-1"}]},{"id":"swc-qualifier-4-2026","name":"WH40K SWC: Qualifier 4 - June","date":"2026-06-27","city":null,"region":"Wales","country":"GB","players":30,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: Eleven Times Eleven pt.1 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Struan Robertson","faction":"Thousand Sons","subfaction":null,"detachments":["Sekhetar Cohort","Warpforged Cabal"],"disposition":"Priority Assets","record":"5-0"},{"place":2,"player":"Andrew Lewis","faction":"Chaos Space Marines","subfaction":null,"detachments":["Soulforged Warpack","Murdertalon Raiders"],"disposition":"Purge the Foe","record":"4-1"},{"place":3,"player":"Nicholas Christensen-Secker","faction":"Thousand Sons","subfaction":null,"detachments":["Sekhetar Cohort","Warpforged Cabal"],"disposition":"Priority Assets","record":"4-1"},{"place":4,"player":"Chloe Chippindale","faction":"Black Templars","subfaction":null,"detachments":["The Living Miracle","Stormlance Task Force"],"disposition":"Purge the Foe","record":"4-1"},{"place":5,"player":"Chris Lewis","faction":"Dark Angels","subfaction":null,"detachments":["Darkflight Pursuit","Fulguris Task Force","Librarius Conclave"],"disposition":"Reconnaissance","record":"4-1"},{"place":6,"player":"Ieuan Bevan","faction":"T'au Empire","subfaction":null,"detachments":["Advanced Acquisition Cadre","Retaliation Cadre"],"disposition":"Purge the Foe","record":"4-1"}]},{"id":"dawn-of-11th-oslo-2026","name":"Dawn of 11th: Vår has passed","date":"2026-06-27","city":"Oslo","region":null,"country":"NO","players":50,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: Eleven Times Eleven pt.2 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Eirik Rokne Stensland","faction":"T'au Empire","subfaction":null,"detachments":["Advanced Acquisition Cadre","Retaliation Cadre"],"disposition":null,"record":"5-0"},{"place":2,"player":"Jonathan Arkin","faction":"Orks","subfaction":null,"detachments":["War Horde"],"disposition":"Take and Hold","record":null,"notes":"undefeated"},{"place":3,"player":"Marcin Nowicki","faction":"Space Marines","subfaction":"Salamanders","detachments":["Forgefather's Seekers","Librarius Conclave"],"disposition":null,"record":"4-1"},{"place":4,"player":"Sveinung Nøding","faction":"Tyranids","subfaction":null,"detachments":["Talons of the Norn Queen","Crusher Stampede"],"disposition":null,"record":"4-1"},{"place":5,"player":"Rasmus Valand Fredriksen","faction":"Necrons","subfaction":null,"detachments":["Awakened Dynasty"],"disposition":null,"record":"4-1"},{"place":6,"player":"Geir Dutta","faction":"Thousand Sons","subfaction":null,"detachments":["Sekhetar Cohort","Hexwarp Thrallband"],"disposition":null,"record":"4-1"},{"place":7,"player":"Victor Bergenholtz","faction":"Imperial Knights","subfaction":null,"detachments":["Dominus Foebreakers","Gate Warden Lance"],"disposition":null,"record":"4-1"},{"place":8,"player":"Jesper Vestergaard","faction":"Chaos Daemons","subfaction":null,"detachments":["Cavalcade of Chaos","Shadow Legion"],"disposition":null,"record":"4-1"},{"place":9,"player":"Thomas Harkestad","faction":"Tyranids","subfaction":null,"detachments":["Warrior Bioform Onslaught","Vanguard Onslaught"],"disposition":null,"record":"4-1"}]},{"id":"iberian-open-la-rioja-2026","name":"II Iberian Open La Rioja","date":"2026-06-27","city":"Alfaro","region":"RI","country":"ES","players":34,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: Eleven Times Eleven pt.2 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"koldo besga","faction":"T'au Empire","subfaction":null,"detachments":["Mont'ka"],"disposition":null,"record":"5-0"},{"place":2,"player":"Juan Lopez","faction":"Necrons","subfaction":null,"detachments":["Hypercrypt Legion"],"disposition":"Take and Hold","record":"4-1"},{"place":3,"player":"David Pedrosa","faction":"Imperial Knights","subfaction":null,"detachments":["Freeblade Company"],"disposition":"Purge the Foe","record":"4-1"},{"place":4,"player":"Sergio Munoz","faction":"Adeptus Custodes","subfaction":null,"detachments":["Might of the Moritoi","Lions of the Emperor"],"disposition":"Purge the Foe","record":"4-1"},{"place":5,"player":"El Becario","faction":"Space Marines","subfaction":null,"detachments":["Fulguris Task Force","Hammer of Avernii"],"disposition":null,"record":"4-1"},{"place":6,"player":"Ivan Aparicio","faction":"Tyranids","subfaction":null,"detachments":["Talons of the Norn Queen","Assimilation Swarm"],"disposition":null,"record":"4-1"}]},{"id":"indy-open-2026","name":"Indy Open GT 2026","date":"2026-06-27","city":"Plainfield","region":"IN","country":"US","players":31,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: Eleven Times Eleven pt.2 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Benjamin Handziak","faction":"Necrons","subfaction":null,"detachments":["The Phaeron's Armoury","Cursed Legion"],"disposition":"Purge the Foe","record":"5-0"},{"place":2,"player":"Alexx Murphy","faction":"Space Marines","subfaction":"Ultramarines","detachments":["Blade of Ultramar"],"disposition":null,"record":"4-1"},{"place":3,"player":"Steve Bradford","faction":"Space Marines","subfaction":null,"detachments":["Fulguris Task Force","Forgefather's Seekers"],"disposition":null,"record":"4-1"},{"place":4,"player":"Eli Diehr","faction":"Grey Knights","subfaction":null,"detachments":["Argent Assault","Banishers"],"disposition":null,"record":"4-1"},{"place":5,"player":"Adam Kojich","faction":"Orks","subfaction":null,"detachments":["More Dakka","Green Tide"],"disposition":null,"record":"4-1"},{"place":6,"player":"Steve Hamilton","faction":"Chaos Daemons","subfaction":null,"detachments":["Warptide","Plague Legion"],"disposition":null,"record":"4-1"}]},{"id":"hour-zero-3-2026","name":"Hour Zero 3: Dawn of Heroes","date":"2026-06-27","city":"Großweil","region":"BY","country":"DE","players":29,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: Eleven Times Eleven pt.2 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Christoph Müller","faction":"T'au Empire","subfaction":null,"detachments":["Mont'ka"],"disposition":null,"record":"5-0"},{"place":2,"player":"Bogdan-Mihai Râpea","faction":"Thousand Sons","subfaction":null,"detachments":["Sekhetar Cohort","Hexwarp Thrallband"],"disposition":null,"record":"4-1"},{"place":3,"player":"Roman Kleiber","faction":"Orks","subfaction":null,"detachments":["More Dakka","Bully Boyz"],"disposition":null,"record":"4-1"},{"place":4,"player":"Landric MacMillan","faction":"Orks","subfaction":null,"detachments":["Freebooter Krew","More Dakka"],"disposition":null,"record":"4-1"},{"place":5,"player":"Marco Ade","faction":"Blood Angels","subfaction":null,"detachments":["Liberator Assault Group"],"disposition":null,"record":"4-1"}]},{"id":"battle-for-the-capital-2026","name":"Battle For The Capital GT","date":"2026-06-27","city":"Holt","region":"MI","country":"US","players":50,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: Eleven Times Eleven pt.3 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Scott Ketcham","faction":"Adepta Sororitas","subfaction":null,"detachments":["Hallowed Martyrs"],"disposition":"Priority Assets","record":"5-0"},{"place":2,"player":"Kyle Sams","faction":"Emperor's Children","subfaction":null,"detachments":["Coterie of the Conceited"],"disposition":"Purge the Foe","record":"4-1"},{"place":3,"player":"Ian Smith","faction":"Thousand Sons","subfaction":null,"detachments":["Hexwarp Thrallband","Sekhetar Cohort"],"disposition":"Priority Assets","record":"4-1"},{"place":4,"player":"Will Horan","faction":"Adeptus Custodes","subfaction":null,"detachments":["Silent Hunters","Lions of the Emperor"],"disposition":"Reconnaissance","record":"4-1"},{"place":5,"player":"Willie Couch","faction":"Leagues of Votann","subfaction":null,"detachments":["Hearthguard Covenant","Needgaârd Oathband"],"disposition":"Priority Assets","record":"4-1"},{"place":6,"player":"Manik Gudimani","faction":"Emperor's Children","subfaction":null,"detachments":["Spectacle of Slaughter","Peerless Bladesmen"],"disposition":"Purge the Foe","record":"4-1"},{"place":7,"player":"Mark Chojnowski","faction":"Space Marines","subfaction":"Ultramarines","detachments":["Blade of Ultramar"],"disposition":"Priority Assets","record":"4-1"},{"place":8,"player":"Shawn Campbell","faction":"Tyranids","subfaction":null,"detachments":["Subterranean Assault"],"disposition":"Disruption","record":"4-1"},{"place":9,"player":"Jerry Reynolds","faction":"Space Marines","subfaction":null,"detachments":["Librarius Conclave","Ironstorm Spearhead"],"disposition":null,"record":"4-1"},{"place":10,"player":"Nathan Ruswinckel","faction":"Imperial Knights","subfaction":null,"detachments":["Freeblade Company"],"disposition":"Purge the Foe","record":"4-1"}]},{"id":"hellpit-gt-2026","name":"Hellpit Grand Tournament","date":"2026-06-27","city":"Brunswick","region":"OH","country":"US","players":34,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: Eleven Times Eleven pt.3 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Sean Martin","faction":"T'au Empire","subfaction":null,"detachments":["Advanced Acquisition Cadre","Kauyon"],"disposition":"Priority Assets","record":"5-0"},{"place":2,"player":"Nicolas Chesnick","faction":"Dark Angels","subfaction":null,"detachments":["Dark Age Arsenal","Company of Hunters"],"disposition":"Disruption","record":null,"notes":"undefeated"},{"place":3,"player":"Alex Brudnicki","faction":"Orks","subfaction":null,"detachments":["Rollin' Deff","Bully Boyz"],"disposition":"Purge the Foe","record":"4-1"},{"place":4,"player":"Gabriel Baughman","faction":"Leagues of Votann","subfaction":null,"detachments":["Armoured Trailblazers","Needgaârd Oathband"],"disposition":"Disruption","record":"4-1"},{"place":5,"player":"Joshua Gilbert","faction":"Space Marines","subfaction":"Salamanders","detachments":["Forgefather's Seekers","Librarius Conclave"],"disposition":"Purge the Foe","record":"4-1"},{"place":6,"player":"Mike Hall","faction":"Orks","subfaction":null,"detachments":["Taktikal Brigade","Green Tide"],"disposition":"Take and Hold","record":"4-1"}]},{"id":"ei-commencing-armageddon-2026","name":"EI Commencing Armageddon: 11th Ed Kickoff GT","date":"2026-06-27","city":"Newport News","region":"VA","country":"US","players":30,"rounds":5,"edition":"11th","event_type":"GT","source":{"facts":"Goonhammer Competitive Innovations in 11th: Eleven Times Eleven pt.3 (results as facts)","lists":"Best Coast Pairings"},"placements":[{"place":1,"player":"Chris Cardamone","faction":"Space Marines","subfaction":"Iron Hands","detachments":["Hammer of Avernii","Librarius Conclave"],"disposition":"Priority Assets","record":"5-0"},{"place":2,"player":"Gregory Moxley","faction":"Astra Militarum","subfaction":null,"detachments":["Designation Force","Mechanised Assault"],"disposition":"Reconnaissance","record":"4-1"},{"place":3,"player":"Emory Garrett","faction":"Drukhari","subfaction":null,"detachments":["Exhibition of Slaughter","Skysplinter Assault"],"disposition":"Reconnaissance","record":"4-1"},{"place":4,"player":"David Penfold","faction":"Chaos Daemons","subfaction":null,"detachments":["Warptide","Plague Legion"],"disposition":"Take and Hold","record":"4-1"},{"place":5,"player":"Roland Hubert","faction":"Thousand Sons","subfaction":null,"detachments":["Ritual of Regeneration","Hexwarp Thrallband"],"disposition":"Take and Hold","record":"4-1"}]}]}</script>
+<script>
+"use strict";
+const DB = JSON.parse(document.getElementById("events-data").textContent);
+const $ = id => document.getElementById(id);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------- theme toggle (auto → light → dark) ---------- */
+const themeBtn = $("themeBtn");
+const themes = ["auto","light","dark"];
+let themeIdx = 0;
+themeBtn.addEventListener("click", () => {
+  themeIdx = (themeIdx + 1) % 3;
+  const t = themes[themeIdx];
+  if (t === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+  themeBtn.textContent = "Theme: " + t;
+  render();
+});
+
+/* ---------- tooltip ---------- */
+const tip = $("tooltip");
+function showTip(evt, rows){
+  tip.replaceChildren();
+  rows.forEach(([k, v, strong]) => {
+    const d = document.createElement("div");
+    const kv = document.createElement("span");
+    kv.className = strong ? "tv" : "tk";
+    kv.textContent = strong ? v : k + "  " + v;
+    d.appendChild(kv);
+    tip.appendChild(d);
+  });
+  tip.style.display = "block";
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  if (x + w > innerWidth - 8) x = evt.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = evt.clientY - h - pad;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip(){ tip.style.display = "none"; }
+function attachTip(el, rowsFn){
+  el.addEventListener("pointermove", e => showTip(e, rowsFn()));
+  el.addEventListener("pointerleave", hideTip);
+  el.tabIndex = 0;
+  el.addEventListener("focus", () => {
+    const r = el.getBoundingClientRect();
+    showTip({clientX: r.right, clientY: r.top}, rowsFn());
+  });
+  el.addEventListener("blur", hideTip);
+}
+
+/* ---------- filters ---------- */
+const fWeek = $("fWeek"), fFaction = $("fFaction");
+function fillSelect(sel, options, allLabel){
+  sel.replaceChildren();
+  const all = document.createElement("option");
+  all.value = ""; all.textContent = allLabel;
+  sel.appendChild(all);
+  options.forEach(o => {
+    const op = document.createElement("option");
+    op.value = o; op.textContent = o;
+    sel.appendChild(op);
+  });
+}
+const weeks = [...new Set(DB.events.map(e => e.date))].sort();
+fillSelect(fWeek, weeks, "All weekends");
+const factionsPresent = [...new Set(DB.events.flatMap(e => e.placements.map(p => p.faction)))].sort();
+fillSelect(fFaction, factionsPresent, "All factions");
+fWeek.addEventListener("change", render);
+fFaction.addEventListener("change", render);
+
+/* ---------- data slicing ---------- */
+function slice(){
+  const wk = fWeek.value, fac = fFaction.value;
+  const events = DB.events.filter(e => !wk || e.date === wk);
+  const placements = [];
+  events.forEach(e => e.placements.forEach(p => {
+    if (!fac || p.faction === fac)
+      placements.push({...p, event: e.name, date: e.date, eventId: e.id});
+  }));
+  return {events, placements};
+}
+
+/* ---------- chart builders ---------- */
+function barChart(host, items, colorVar, tipTitle){
+  /* items: [{label, value, extra}] sorted desc */
+  host.replaceChildren();
+  const max = Math.max(1, ...items.map(i => i.value));
+  items.forEach(it => {
+    const row = document.createElement("div"); row.className = "row";
+    const name = document.createElement("div"); name.className = "name";
+    name.textContent = it.label; name.title = it.label;
+    const track = document.createElement("div"); track.className = "track";
+    const fill = document.createElement("div"); fill.className = "fill";
+    fill.style.width = (it.value / max * 100) + "%";
+    fill.style.background = css(colorVar);
+    track.appendChild(fill);
+    const val = document.createElement("div"); val.className = "val";
+    val.textContent = it.value;
+    row.append(name, track, val);
+    attachTip(row, () => {
+      const rows = [["", it.label, true], [tipTitle, String(it.value)]];
+      (it.extra || []).forEach(x => rows.push(x));
+      return rows;
+    });
+    host.appendChild(row);
+  });
+  if (!items.length) empty(host);
+}
+
+function stackedChart(host, items, tiers){
+  /* items: [{label, counts:[n1,n2,n3]}]; tiers: [{name, colorVar}] */
+  host.replaceChildren();
+  const max = Math.max(1, ...items.map(i => i.counts.reduce((a,b)=>a+b,0)));
+  items.forEach(it => {
+    const total = it.counts.reduce((a,b)=>a+b,0);
+    const row = document.createElement("div"); row.className = "row";
+    const name = document.createElement("div"); name.className = "name";
+    name.textContent = it.label; name.title = it.label;
+    const track = document.createElement("div"); track.className = "stack";
+    it.counts.forEach((c, i) => {
+      if (!c) return;
+      const seg = document.createElement("div"); seg.className = "seg";
+      seg.style.width = (c / max * 100) + "%";
+      seg.style.background = css(tiers[i].colorVar);
+      track.appendChild(seg);
+    });
+    const val = document.createElement("div"); val.className = "val";
+    val.textContent = total;
+    row.append(name, track, val);
+    attachTip(row, () => [["", it.label, true],
+      ...it.counts.map((c, i) => [tiers[i].name, String(c)]),
+      ["Total", String(total)]]);
+    host.appendChild(row);
+  });
+  if (!items.length) empty(host);
+}
+
+function empty(host){
+  const d = document.createElement("div");
+  d.className = "desc"; d.textContent = "No data for this filter.";
+  host.appendChild(d);
+}
+
+/* ---------- render ---------- */
+function render(){
+  const {events, placements} = slice();
+  const fac = fFaction.value;
+
+  /* tiles */
+  const winners = placements.filter(p => p.place === 1);
+  const winsBy = count(winners.map(p => p.faction));
+  const top = [...winsBy.entries()].sort((a,b) => b[1]-a[1])[0];
+  const tiles = [
+    ["Events tracked", events.length, events.length ? fmtRange(events) : ""],
+    ["Players in fields", events.reduce((a,e) => a+e.players, 0), "sum of event field sizes"],
+    ["Placements recorded", placements.length, "top tables only — not full standings"],
+    ["Most event wins", top ? top[0] : "—", top ? top[1] + (top[1] === 1 ? " win" : " wins") : ""]
+  ];
+  $("tiles").replaceChildren(...tiles.map(([l, v, n]) => {
+    const t = document.createElement("div"); t.className = "tile";
+    const lbl = document.createElement("div"); lbl.className = "lbl"; lbl.textContent = l;
+    const val = document.createElement("div"); val.className = "val"; val.textContent = v;
+    const note = document.createElement("div"); note.className = "note"; note.textContent = n;
+    t.append(lbl, val, note); return t;
+  }));
+
+  /* wins by faction — winners unaffected by faction filter make no sense; respect filter */
+  barChart($("winsChart"),
+    sortDesc(count(winners.map(p => p.faction))).map(([f, n]) => ({label: f, value: n})),
+    "--series-1", "Event wins");
+
+  /* tier stacked */
+  const tiers = [
+    {name: "1st", colorVar: "--ord-1"},
+    {name: "2nd–3rd", colorVar: "--ord-2"},
+    {name: "4th+", colorVar: "--ord-3"}
+  ];
+  $("tierLegend").replaceChildren(...tiers.map(t => {
+    const k = document.createElement("span"); k.className = "key";
+    const sw = document.createElement("span"); sw.className = "sw";
+    sw.style.background = css(t.colorVar);
+    const txt = document.createElement("span"); txt.textContent = t.name;
+    k.append(sw, txt); return k;
+  }));
+  const byFaction = group(placements, p => p.faction);
+  const tierItems = [...byFaction.entries()].map(([f, ps]) => ({
+    label: f,
+    counts: [
+      ps.filter(p => p.place === 1).length,
+      ps.filter(p => p.place === 2 || p.place === 3).length,
+      ps.filter(p => p.place > 3).length
+    ]
+  })).sort((a,b) => sum(b.counts) - sum(a.counts) || b.counts[0] - a.counts[0]);
+  stackedChart($("tierChart"), tierItems, tiers);
+
+  /* detachment combos (order-insensitive: sort names before joining) */
+  const comboKey = p => [...p.detachments].sort().join(" + ");
+  const comboItems = sortDesc(count(placements.map(comboKey)))
+    .slice(0, 12).map(([c, n]) => {
+      const facs = [...new Set(placements.filter(p => comboKey(p) === c).map(p => p.faction))];
+      return {label: c, value: n, extra: [["Faction", facs.join(", ")]]};
+    });
+  barChart($("comboChart"), comboItems, "--series-2", "Top-table finishes");
+
+  /* dispositions */
+  const withDisp = placements.filter(p => p.disposition);
+  $("dispDesc").textContent = withDisp.length + " of " + placements.length +
+    " recorded placements state a disposition";
+  barChart($("dispChart"),
+    sortDesc(count(withDisp.map(p => p.disposition))).map(([d, n]) => ({label: d, value: n})),
+    "--series-5", "Top-table finishes");
+
+  /* placements table */
+  const ptb = $("plTable").querySelector("tbody");
+  ptb.replaceChildren(...placements
+    .sort((a,b) => a.date.localeCompare(b.date) || a.eventId.localeCompare(b.eventId) || a.place - b.place)
+    .map(p => {
+      const tr = document.createElement("tr");
+      if (p.place === 1) tr.className = "place1";
+      row(tr, String(p.place), "num");
+      row(tr, p.player);
+      row(tr, p.faction + (p.subfaction ? " (" + p.subfaction + ")" : ""));
+      row(tr, p.detachments.join(" + "));
+      row(tr, p.disposition || "—");
+      row(tr, p.record || (p.notes || "—"));
+      row(tr, p.event);
+      row(tr, p.date, "num");
+      return tr;
+    }));
+
+  /* events table */
+  const etb = $("evTable").querySelector("tbody");
+  etb.replaceChildren(...events.map(e => {
+    const w = e.placements.find(p => p.place === 1);
+    const tr = document.createElement("tr");
+    row(tr, e.name);
+    row(tr, e.date, "num");
+    row(tr, [e.city, e.region, e.country].filter(Boolean).join(", "));
+    row(tr, String(e.players), "num");
+    row(tr, String(e.rounds), "num");
+    row(tr, w ? (w.faction + " — " + w.player) : "—");
+    return tr;
+  }));
+
+  $("filterNote").textContent = fac ? "Showing " + fac + " only — wins chart reflects the filter" : "";
+}
+
+function row(tr, text, cls){
+  const td = document.createElement("td");
+  if (cls) td.className = cls;
+  td.textContent = text;
+  tr.appendChild(td);
+}
+function count(arr){ const m = new Map(); arr.forEach(x => m.set(x, (m.get(x)||0)+1)); return m; }
+function group(arr, fn){ const m = new Map(); arr.forEach(x => { const k = fn(x); (m.get(k) || m.set(k, []).get(k)).push(x); }); return m; }
+function sortDesc(m){ return [...m.entries()].sort((a,b) => b[1]-a[1] || String(a[0]).localeCompare(String(b[0]))); }
+function sum(a){ return a.reduce((x,y)=>x+y,0); }
+function fmtRange(evs){
+  const ds = evs.map(e => e.date).sort();
+  return ds[0] === ds[ds.length-1] ? ds[0] : ds[0] + " → " + ds[ds.length-1];
+}
+
+/* header */
+$("edBadge").textContent = (DB.events[0] ? DB.events[0].edition : "—") + " edition";
+$("updated").textContent = "data through " + DB.updated;
+{
+  const f = $("foot");
+  f.textContent = "Results compiled from public tournament coverage (facts only); full lists on Best Coast Pairings. " +
+    "Placement-based statistics — per-game win rates require full pairings data (roadmap). Schema v" + DB.schema_version + ".";
+}
+render();
+</script>
+</body>
+</html>
