@@ -1134,7 +1134,7 @@ function render(){
   /* placements table */
   const ptb = $("plTable").querySelector("tbody");
   ptb.replaceChildren(...placements
-    .sort((a,b) => a.date.localeCompare(b.date) || a.eventId.localeCompare(b.eventId) || a.place - b.place)
+    .sort((a,b) => b.date.localeCompare(a.date) || a.eventId.localeCompare(b.eventId) || a.place - b.place)
     .map(p => {
       const tr = document.createElement("tr");
       if (p.place === 1) tr.className = "place1";
@@ -1173,7 +1173,7 @@ function render(){
 
   /* events table */
   const etb = $("evTable").querySelector("tbody");
-  etb.replaceChildren(...events.map(e => {
+  etb.replaceChildren(...events.slice().sort((a,b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name)).map(e => {
     const w = e.placements.find(p => p.place === 1);
     const tr = document.createElement("tr");
     if (e.source && e.source.facts) tr.title = "Results via " + e.source.facts;
